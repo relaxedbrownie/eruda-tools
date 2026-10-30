@@ -3,8 +3,8 @@
 휴대폰 브라우저에서 [Eruda](https://github.com/liriliri/eruda)(개발자 도구)를 띄우고, Elements 탭을 더 편하게 쓰게 해 주는 북마클릿입니다.
 
 - Elements 탭 글자를 길게 눌러 선택·복사
-- ✎ 버튼: 선택한 노드(HTML·속성·텍스트) 직접 수정, 되돌리기
-- 🔍 버튼: 글자·속성·CSS 선택자로 검색
+- <picture><source media="(prefers-color-scheme: dark)" srcset="images/icon-edit-dark.svg"><img src="images/icon-edit.svg" width="16" height="16" alt="수정"></picture> 수정 버튼: 선택한 노드(HTML·속성·텍스트) 직접 수정, 되돌리기
+- <picture><source media="(prefers-color-scheme: dark)" srcset="images/icon-find-dark.svg"><img src="images/icon-find.svg" width="16" height="16" alt="검색"></picture> 검색 버튼: 글자·속성·CSS 선택자로 검색
 - 톱니 버튼 길게 누르기: 숨김 (숨긴 동안 화면을 건드리면 잠깐 보였다 사라짐)
   - 누르는 동안 톱니 둘레에 테두리가 차오르고, 다 차는 순간(0.6초) 숨김/보이기가 바뀝니다
 - 북마클릿을 다시 누르면 Eruda 끄기
