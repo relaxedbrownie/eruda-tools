@@ -12,15 +12,14 @@
 
 ## 짧은 북마클릿(삼성 브라우저 등 북마크 주소가 2048자로 제한된 브라우저)
 
-[`eruda-bookmarklet-short.txt`](eruda-bookmarklet-short.txt)의 내용 한 줄을 그대로 복사해서 북마크 주소에 붙여 넣으세요.
-이 북마클릿은 아래 주소에서 전체 코드를 받아 실행합니다(jsDelivr를 거쳐 이 저장소의 `v1.6.0` 태그 파일을 받음).
+아래 코드 블록 오른쪽의 **복사 버튼**을 눌러 한 줄 전체를 복사하세요([`eruda-bookmarklet-short.txt`](eruda-bookmarklet-short.txt)와 같은 내용).
 
 ```
-https://cdn.jsdelivr.net/gh/relaxedbrownie/eruda-tools@v1.6.0/eruda-bookmarklet.js
+javascript:!function()%7Bvar%20e=%22https://cdn.jsdelivr.net/gh/relaxedbrownie/eruda-tools@v1.6.0/eruda-bookmarklet.js%22;try%7Bvar%20t=document.createElement(%22script%22);t.src=e,t.onerror=function()%7Balert(%22[Eruda%20%5Cubd81%5Cub9c8%5Cud074%5Cub9bf]%20%5Cucf54%5Cub4dc%20%5Cud30c%5Cuc77c%5Cuc744%20%5Cubd88%5Cub7ec%5Cuc624%5Cuc9c0%20%5Cubabb%5Cud588%5Cuc5b4%5Cuc694.%5Cn%5Cuc6d0%5Cuc778:%20%5Cuc0ac%5Cuc774%5Cud2b8%20%5Cubcf4%5Cuc548%20%5Cuc815%5Cucc45(CSP)%5Cxb7%5Cub124%5Cud2b8%5Cuc6cc%5Cud06c%5Cxb7%5Cucc28%5Cub2e8%20%5Cuc571,%20%5Cub610%5Cub294%20GitHub%20%5Cuc800%5Cuc7a5%5Cuc18c%5Cxb7%5Cud0dc%5Cuadf8(v1.6.0)%20%5Cud655%5Cuc778%5Cn%22+e)%7D,(document.head%7C%7Cdocument.documentElement).appendChild(t)%7Dcatch(e)%7Balert(%22[Eruda%20%5Cubd81%5Cub9c8%5Cud074%5Cub9bf]%20%22+(/trusted/i.test(e.message)?%22%5Cuc774%20%5Cuc0ac%5Cuc774%5Cud2b8%5Cuc758%20%5Cubcf4%5Cuc548%20%5Cuc815%5Cucc45(Trusted%20Types)%5Cuc774%20%5Cub9c9%5Cuc74c%20%5Cu2192%20%5Cuc720%5Cuc800%5Cuc2a4%5Cud06c%5Cub9bd%5Cud2b8%5Cub97c%20%5Cuc4f0%5Cuc138%5Cuc694%22:e.message))%7D%7D();//%
 ```
 
 1. 아무 페이지나 북마크로 저장하고, 이름을 `Eruda`처럼 짧게 바꾸기
-2. 그 북마크를 편집해서 주소 칸을 지우고 `eruda-bookmarklet-short.txt` 내용을 붙여 넣기
+2. 그 북마크를 편집해서 주소 칸을 지우고 위에서 복사한 코드를 붙여 넣기
 3. Eruda를 쓰고 싶은 페이지에서 **주소창**에 북마크 이름 앞 몇 글자(예: `er`)를 입력
 4. 아래 추천 목록에서 **별 아이콘이 붙은 그 북마크 줄**을 누르기
 
@@ -39,7 +38,7 @@ https://cdn.jsdelivr.net/gh/relaxedbrownie/eruda-tools@v1.6.0/eruda-bookmarklet.
 
 | 파일 | 설명 |
 |---|---|
-| `eruda-bookmarklet.js` | 짧은 북마클릿이 받아 오는 전체 코드(전체 북마클릿과 같은 코드) |
+| `eruda-bookmarklet.js` | 짧은 북마클릿이 실행할 때 jsDelivr를 거쳐 받아 오는 전체 코드(전체 북마클릿과 같은 코드, `v1.6.0` 태그의 파일) |
 | `eruda-bookmarklet-short.txt` | 짧은 북마클릿 |
 
 ## 업데이트
