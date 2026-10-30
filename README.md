@@ -1,6 +1,6 @@
 # eruda-tools
 
-휴대폰 브라우저에서 [Eruda](https://github.com/liriliri/eruda)(개발자 도구)를 띄우고, Elements 탭을 더 편하게 쓰게 해 주는 유저스크립트와 북마클릿입니다.
+모바일 브라우저에서 [Eruda](https://github.com/liriliri/eruda)(개발자 도구)를 띄우고, Elements 탭을 더 편하게 쓰게 해 주는 유저스크립트와 북마클릿입니다.
 
 - Elements 탭 글자를 길게 눌러 선택·복사
 - <picture><source media="(prefers-color-scheme: dark)" srcset="images/icon-edit-dark.svg"><img src="images/icon-edit.svg" width="16" height="16" alt="수정"></picture> 수정 버튼: 선택한 노드(HTML·속성·텍스트) 직접 수정, 되돌리기
@@ -13,7 +13,7 @@
 세 가지 방법 모두 기능은 같습니다.
 
 - [**유저스크립트**](#유저스크립트): Tampermonkey·wBlock(iOS)·AdGuard를 쓸 때 추천합니다. 페이지를 열면 자동으로 뜨고, 북마클릿이 막히는 사이트에서도 대부분 됩니다.
-- [**짧은 북마클릿**](#짧은-북마클릿): 유저스크립트 앱을 설치하지 않고 쓸 때 추천합니다. 사파리·삼성 브라우저·크롬 등 대부분의 휴대폰 브라우저에서 됩니다.
+- [**짧은 북마클릿**](#짧은-북마클릿): 유저스크립트 앱을 설치하지 않고 쓸 때 추천합니다. 사파리·삼성 브라우저·크롬 등 대부분의 모바일 브라우저에서 됩니다.
 - [**전체 북마클릿**](#전체-북마클릿): 사파리처럼 북마크 주소 길이 제한이 없는 브라우저에서, 이 저장소를 거치지 않고 쓰고 싶을 때 씁니다.
 
 ## 유저스크립트
