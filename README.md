@@ -5,15 +5,15 @@
 - Elements 탭 글자를 길게 눌러 선택·복사
 - <picture><source media="(prefers-color-scheme: dark)" srcset="images/icon-edit-dark.svg"><img src="images/icon-edit.svg" width="16" height="16" alt="수정"></picture> 수정 버튼: 선택한 노드(HTML·속성·텍스트) 직접 수정, 되돌리기
 - <picture><source media="(prefers-color-scheme: dark)" srcset="images/icon-find-dark.svg"><img src="images/icon-find.svg" width="16" height="16" alt="검색"></picture> 검색 버튼: 글자·속성·CSS 선택자로 검색
-- 톱니 버튼 길게 누르기: 숨김 (숨긴 동안 화면을 건드리면 잠깐 보였다 사라짐)
-  - 누르는 동안 톱니 둘레에 테두리가 차오르고, 다 차는 순간(0.6초) 숨김/보이기가 바뀝니다
+- 톱니 버튼 길게 누르기: 숨김(숨긴 동안 화면을 건드리면 잠깐 보였다 사라짐)
+  - 누르는 동안 톱니 둘레에 테두리가 차오르고, 다 차는 순간(0.6초) 숨김/보이기가 바뀜
 - 북마클릿을 다시 누르면 Eruda 끄기
 - 진단: Eruda > Info 탭 맨 아래 '선택·수정·검색 패치 진단'
 
-## 짧은 북마클릿 (삼성 브라우저 등 북마크 주소가 2048자로 제한된 브라우저)
+## 짧은 북마클릿(삼성 브라우저 등 북마크 주소가 2048자로 제한된 브라우저)
 
 [`eruda-bookmarklet-short.txt`](eruda-bookmarklet-short.txt)의 내용 한 줄을 그대로 복사해서 북마크 주소에 붙여 넣으세요.
-이 북마클릿은 아래 주소에서 전체 코드를 받아 실행합니다 (jsDelivr를 거쳐 이 저장소의 `v1.6.0` 태그 파일을 받음).
+이 북마클릿은 아래 주소에서 전체 코드를 받아 실행합니다(jsDelivr를 거쳐 이 저장소의 `v1.6.0` 태그 파일을 받음).
 
 ```
 https://cdn.jsdelivr.net/gh/relaxedbrownie/eruda-tools@v1.6.0/eruda-bookmarklet.js
@@ -39,7 +39,7 @@ https://cdn.jsdelivr.net/gh/relaxedbrownie/eruda-tools@v1.6.0/eruda-bookmarklet.
 
 | 파일 | 설명 |
 |---|---|
-| `eruda-bookmarklet.js` | 짧은 북마클릿이 불러가는 전체 코드 (전체 북마클릿과 같은 코드) |
+| `eruda-bookmarklet.js` | 짧은 북마클릿이 받아 오는 전체 코드(전체 북마클릿과 같은 코드) |
 | `eruda-bookmarklet-short.txt` | 짧은 북마클릿 |
 
 ## 업데이트
