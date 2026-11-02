@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Eruda + Elements 선택·복사·수정·검색
 // @namespace    eruda-select-patch
-// @version      1.6.0
-// @description  페이지에 Eruda를 띄우고, Elements 탭의 글자를 길게 눌러 선택·복사할 수 있게 하며, ✎ 버튼으로 선택한 노드(HTML·속성·텍스트)를 직접 수정하고, 🔍 버튼으로 글자·속성·CSS 선택자를 검색할 수 있게 합니다. 톱니 버튼을 길게 누르면 숨기고(화면을 건드리면 잠깐 보였다 사라짐), 다시 길게 누르면 보입니다. 북마클릿으로 Eruda를 켜고 끌 수 있습니다. 진단 결과는 Eruda > Info 탭에 표시됩니다.
+// @version      1.7.0
+// @description  페이지에 Eruda를 띄우고, Elements 탭의 글자를 길게 눌러 선택·복사할 수 있게 하며, ✎ 버튼으로 선택한 노드(HTML·속성·텍스트)를 직접 수정하고, 🔍 버튼으로 글자·속성·CSS 선택자를 검색할 수 있게 합니다. 톱니 버튼을 길게 누르면 숨기고(화면을 건드리면 잠깐 보였다 사라짐), 다시 길게 누르면 보입니다. 북마클릿으로 Eruda를 켜고 끌 수 있습니다. '바로가기' 탭에서는 페이지 코드 안에만 있는, 특정 칸으로 바로 가는 주소를 찾아 줍니다. 진단 결과는 Eruda > Info 탭에 표시됩니다.
 // @match        *://*/*
 // @require      https://cdn.jsdelivr.net/npm/eruda@3.4.3/eruda.js
 // @grant        none
@@ -21,11 +21,12 @@
   // 길게 눌러도 선택이 안 되는 기기가 있으면 false로 바꿔 보세요 (Eruda를 Shadow DOM 없이 띄움)
   var USE_SHADOW_DOM = true;
 
-  var VERSION = '1.6.0';
+  var VERSION = '1.7.0';
   var TAG = '[Eruda 선택·수정·검색 v' + VERSION + ']';
   var STYLE_ID = 'eruda-select-patch-style';
   var EDITOR_ID = 'esp-editor';
   var SEARCH_ID = 'esp-search';
+  var SC_ID = 'esp-sc'; // 바로가기 탭
   // 아이콘 (선 굵기·크기 통일, 색은 Eruda 툴바 글자색을 따라감)
   var ICON_ATTR = 'viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"';
   var ICON_FIND = '<svg ' + ICON_ATTR + '><circle cx="6.9" cy="6.9" r="4.6"/><path d="M10.3 10.3 14 14"/></svg>';
@@ -131,7 +132,38 @@
     '.eruda-entry-btn.esp-hold-done .esp-ring rect { stroke-dashoffset: 0; animation: none; }',
     // 바뀌는 순간 '톡' 커졌다 돌아오기
     '.eruda-entry-btn.esp-hold-pop { animation: esp-hold-pop .25s ease-out; }',
-    '@keyframes esp-hold-pop { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }'
+    '@keyframes esp-hold-pop { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }',
+    // 바로가기 탭 — 색은 편집 창처럼 열 때 Eruda 화면에서 읽어 --esp-* 로 넣음
+    '#' + SC_ID + ' {',
+    '  position: absolute; left: 0; top: 0; width: 100%; height: 100%; box-sizing: border-box; overflow-y: auto; -webkit-overflow-scrolling: touch;',
+    '  font-size: 13px; line-height: 18px; background: var(--esp-bg, #fff); color: var(--esp-fg, #333); padding-bottom: env(safe-area-inset-bottom);',
+    '}',
+    '#' + SC_ID + ' .esp-sc-bar { position: sticky; top: 0; z-index: 1; display: flex; gap: 6px; padding: 6px 10px; background: var(--esp-dark, #f3f3f3); border-bottom: 1px solid var(--esp-border, #ccc); }',
+    '#' + SC_ID + ' .esp-sc-btn { flex: 1; padding: 8px 0; font-size: 14px; text-align: center; border: 1px solid var(--esp-border, #ccc); border-radius: 4px; cursor: pointer; color: var(--esp-fg, #333); background: var(--esp-bg, #fff); }',
+    '#' + SC_ID + ' .esp-sc-btn.esp-primary { color: #fff; background: var(--esp-accent, #1a73e8); border-color: var(--esp-accent, #1a73e8); }',
+    '#' + SC_ID + ' .esp-sc-btn.esp-off { opacity: .4; }',
+    '#' + SC_ID + ' .esp-sc-msg { padding: 8px 10px; white-space: pre-wrap; border-bottom: 1px solid var(--esp-border, #ccc); }',
+    '#' + SC_ID + ' .esp-sc-msg.esp-err { color: #e53935; }',
+    '#' + SC_ID + ' .esp-sc-h { padding: 10px 10px 4px; font-weight: bold; }',
+    '#' + SC_ID + ' .esp-sc-sub, #' + SC_ID + ' .esp-sc-none { font-weight: normal; opacity: .6; font-size: 12px; }',
+    '#' + SC_ID + ' .esp-sc-none { padding: 0 10px 6px; }',
+    '#' + SC_ID + ' .esp-sc-list { max-height: 30vh; overflow-y: auto; -webkit-overflow-scrolling: touch; margin: 0 10px; border: 1px solid var(--esp-border, #ccc); border-radius: 4px; }',
+    '#' + SC_ID + ' .esp-sc-pick { display: flex; gap: 6px; align-items: baseline; padding: 7px 8px; border-bottom: 1px solid var(--esp-border, #ccc); cursor: pointer; white-space: nowrap; overflow: hidden; }',
+    '#' + SC_ID + ' .esp-sc-pick:last-child { border-bottom: 0; }',
+    '#' + SC_ID + ' .esp-sc-pick.esp-on { background: var(--esp-hi, #eaeaea); box-shadow: inset 3px 0 0 var(--esp-accent, #1a73e8); }',
+    '#' + SC_ID + ' .esp-sc-pick span { opacity: .6; overflow: hidden; text-overflow: ellipsis; }',
+    '#' + SC_ID + ' i { flex: none; font-style: normal; font-size: 11px; padding: 0 5px; border-radius: 3px; color: var(--esp-accent, #1a73e8); border: 1px solid var(--esp-accent, #1a73e8); }',
+    '#' + SC_ID + ' .esp-sc-row { margin: 6px 10px; padding: 8px; border: 1px solid var(--esp-border, #ccc); border-radius: 4px; }',
+    '#' + SC_ID + ' .esp-sc-row.esp-ok { border-color: #2e7d32; box-shadow: inset 3px 0 0 #2e7d32; }',
+    '#' + SC_ID + ' .esp-sc-name { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }',
+    '#' + SC_ID + ' .esp-sc-name em { font-style: normal; font-size: 12px; margin-left: auto; }',
+    '#' + SC_ID + ' .esp-sc-url { margin: 6px 0; font-family: var(--esp-mono, ui-monospace, Menlo, monospace); font-size: 12px; word-break: break-all; opacity: .8; }',
+    '#' + SC_ID + ' .esp-sc-url, #' + SC_ID + ' .esp-sc-tip { -webkit-user-select: text !important; user-select: text !important; -webkit-touch-callout: default !important; }',
+    '#' + SC_ID + ' .esp-sc-btns { display: flex; gap: 6px; }',
+    '#' + SC_ID + ' .esp-sc-btns span { flex: 1; padding: 6px 0; text-align: center; border: 1px solid var(--esp-border, #ccc); border-radius: 4px; cursor: pointer; }',
+    '#' + SC_ID + ' .esp-sc-btns span:active, #' + SC_ID + ' .esp-sc-pick:active, #' + SC_ID + ' .esp-sc-btn:active { opacity: .6; }',
+    '#' + SC_ID + ' .esp-sc-tip { margin: 10px; padding: 8px; font-size: 12px; opacity: .75; border-radius: 4px; background: var(--esp-dark, #f3f3f3); word-break: break-all; }',
+    '#' + SC_ID + ' .esp-sc-ta { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; }'
   ].join('\n');
 
   var st = {
@@ -978,6 +1010,393 @@
     });
   }
 
+  // ───── 8. 바로가기 탭: 페이지 안의 특정 칸으로 바로 가는 주소 찾기 ─────
+  // 링크로는 안 보이고 페이지 코드(JS) 안에만 있는 '이동용 주소'를 찾아 줌.
+  //  ① 이동할 칸: id가 붙은 큰 요소(섹션 등). 탭 메뉴 속 칸은 그 메뉴를 먼저 눌러야 생김
+  //  ② 주소 후보: 페이지가 불러온 JS 파일을 다시 받아서, 주소에서 값을 읽는 코드와 이동용으로 보이는 이름을 골라 ?이름=id 로 조합
+  //  ③ 자동 시험: 후보 주소를 보이지 않는 창(iframe)에 띄워 보고, 그 칸이 화면 위쪽으로 오는지 확인
+  // 한계: 이름이 이동과 관계없는 단어거나, 파라미터 여러 개를 같이 써야 하거나, 아직 안 불러온 JS에 있으면 못 찾을 수 있음
+  var SC_NAME = '바로가기';
+  var SC_MAX_FILE = 6 * 1024 * 1024; // 이보다 큰 JS는 건너뜀
+  var SC_SHOW_MAX = 12;              // 주소 후보는 점수 높은 순으로 이만큼만 보임
+  var SC_TEST_MAX = 8;               // 자동 시험은 후보 위에서부터 이만큼까지
+  var SC_TEST_MS = 9000;             // 주소 하나를 시험할 때 최대 대기
+  // 이동용으로 보이는 이름 (점수 더함) — 강한 단어는 더 많이
+  var SC_NAV_STRONG_RE = /anchor|section|jump|goto|scrollto|moveto/i;
+  var SC_NAV_RE = /scroll|move|focus|target|tab|menu|pos|^id$/i;
+  // 이 단어가 들어간 문자열은 변수에 숨겨 둔 파라미터 이름일 수 있어서 따로 모음 (예: "eventAnchor")
+  var SC_KEY_RE = /["'`]([a-z][\w$]{0,30}(?:[Aa]nchor|[Ss]ection|[Jj]ump|[Gg]o[Tt]o|[Ss]croll[Tt]o|[Mm]ove[Tt]o)[\w$]{0,30})["'`]/g;
+  // 위에 걸리지만 주소 파라미터가 아닌 것 (화면 부품·브라우저 기능 이름)
+  var SC_NOISE_RE = /^(anchor(El|Els|Origin|Position|Reference|Point|s|Ref|Node)?|offsetAnchor|scroll(Top|Left|Height|Width|X|Y|IntoView(IfNeeded)?|To|By|Behavior|bar\w*|end|snap\w*|Margin\w*|Padding\w*|ing|Restoration|Timeline|able|Container|Ref|Lock)?|onscroll\w*|query(Key|Hash|Fn|Client|Cache)|state|options|meta|data|status|error|observers|promise|gcTime)$/;
+  // 시험 삼아 열면 안 되는 이름 (로그아웃·결제·외부 이동 등) — 목록에는 보이되 자동 시험에서 뺌
+  var SC_UNSAFE_RE = /logout|signout|delete|remove|pay|order|buy|checkout|cart|token|auth|login|redirect|callback|return|next|url|uri|href|link|share|action|cmd/i;
+  var SC_SKIP_TAGS = /^(html|body|head|script|style|link|meta|template|noscript|svg|path|g|defs|clippath|mask|symbol|use|input|textarea|select|option|button|iframe|img|picture|source|video|audio|canvas|br|hr)$/i;
+  var sc = {
+    reg: '아직',        // 탭 등록 상태
+    root: null,         // 탭 화면
+    url: '',            // 마지막으로 검사한 페이지 주소
+    busy: false,
+    scans: 0,
+    files: 0, read: 0, failed: [], csp: 0, inline: 0,
+    targets: [],        // ① 이동할 칸
+    sel: '',            // 고른 칸 id
+    params: [],         // ② 주소 후보 [{ name, score, kinds }]
+    hash: false,        // 페이지 코드가 주소의 # 뒤를 읽는지
+    results: {},        // 시험 결과 { 주소: { ok, why, top } }
+    testing: '',        // 지금 시험 중인 주소
+    last: '없음'        // 진단용 마지막 결과
+  };
+
+  function scLabel(el) {
+    var h = el.querySelector('h1,h2,h3,h4,h5,strong,[class*="title"],[class*="Title"]');
+    var t = ((h && h.textContent) || el.textContent || '').replace(/\s+/g, ' ').trim();
+    return t.length > 28 ? t.slice(0, 28) + '…' : t;
+  }
+
+  // ① id가 붙은 큰 요소 (보이는 것만, 문서 순서)
+  function scTargets() {
+    var host = getHost(), out = [], all = document.querySelectorAll('[id]');
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i], id = el.id;
+      if (!id || id.length > 60 || SC_SKIP_TAGS.test(el.localName)) continue;
+      if (/^:.*:$|^_R_\w*_$/.test(id) || /^(__next|__nuxt|root|app|eruda)$/i.test(id) || id.indexOf('esp-') === 0) continue; // 자동 생성 id(React 등)·뼈대
+      if (host && host.contains(el)) continue;
+      if (el.closest && el.closest('svg')) continue;
+      var r = el.getBoundingClientRect();
+      if (/^h[1-6]$/i.test(el.localName) ? r.height < 8 : (r.height < 60 || r.width < 120)) continue; // 제목은 작아도 넣음
+      out.push({ id: id, top: Math.round(r.top + window.pageYOffset), h: Math.round(r.height), label: scLabel(el), el: el });
+    }
+    out.sort(function (a, b) { return a.top - b.top || b.h - a.h; });
+    return out;
+  }
+
+  // 지금 화면 위쪽에 걸쳐 있는 칸 중 가장 작은 것 (미리 골라 둠)
+  function scCurrent(list) {
+    var line = window.innerHeight * 0.3, best = null;
+    for (var i = 0; i < list.length; i++) {
+      var r = list[i].el.getBoundingClientRect();
+      if (r.top <= line && r.bottom > line && (!best || r.height < best.h)) best = { id: list[i].id, h: r.height };
+    }
+    return best ? best.id : '';
+  }
+
+  // 페이지가 불러온 JS 파일 주소 (Eruda와 이 도구 자신은 뺌)
+  function scScriptUrls() {
+    var seen = {}, list = [];
+    function add(u) {
+      try { u = new URL(u, location.href).href; } catch (e) { return; }
+      if (!/^https?:/.test(u) || seen[u] || /\/npm\/eruda@|relaxedbrownie\/eruda-tools/.test(u)) return;
+      seen[u] = 1; list.push(u);
+    }
+    try {
+      performance.getEntriesByType('resource').forEach(function (e) {
+        if (e.initiatorType === 'script' || /\.m?js(\?|#|$)/i.test(e.name)) add(e.name);
+      });
+    } catch (e) {}
+    for (var i = 0; i < document.scripts.length; i++) if (document.scripts[i].src) add(document.scripts[i].src);
+    return list;
+  }
+
+  // JS 글 안에서 주소 파라미터 이름 후보 모으기
+  function scAnalyze(text, found) {
+    function add(name, kind, pts) {
+      if (!name || name.length > 40 || SC_NOISE_RE.test(name) || /__[A-Za-z0-9]{5,}$/.test(name)) return; // 끝의 __abc12는 CSS 클래스 이름
+      var f = found[name] || (found[name] = { name: name, score: 0, kinds: Object.create(null) }); // constructor 같은 이름도 안전하게
+      if (!f.kinds[kind]) { f.kinds[kind] = 1; f.score += pts; }
+    }
+    var m, re;
+    // 주소에서 값을 읽는 코드: url.searchParams.get("x"), new URLSearchParams(location.search).get("x"), getQueryParam("x") 등
+    re = /(?:searchParams|URLSearchParams\([^()]{0,80}\))\.get\(\s*["'`]([\w$.-]{1,40})["'`]/g;
+    while ((m = re.exec(text))) add(m[1], '주소에서 읽음', 4);
+    re = /\bget(?:Query|Url|URL)?Param(?:eter)?s?\(\s*["'`]([\w$.-]{1,40})["'`]/g;
+    while ((m = re.exec(text))) add(m[1], '주소에서 읽음', 4);
+    // Next.js 등 라우터: router.query.x
+    re = /\.query\.([A-Za-z_$][\w$]{1,30})\b/g;
+    while ((m = re.exec(text))) add(m[1], '라우터', 1);
+    // 변수에 따로 적어 둔 이름 (예: const P = "eventAnchor"; ... searchParams.get(P))
+    SC_KEY_RE.lastIndex = 0;
+    // 단어 첫머리에 올 때만 (intersection·search_section_id 같은 분석용 이름은 뺌)
+    while ((m = SC_KEY_RE.exec(text))) {
+      if (/^(anchor|section|jump|goto|scrollTo|moveTo)|[a-z0-9](Anchor|Section|Jump|GoTo|Goto|ScrollTo|MoveTo)/.test(m[1])) add(m[1], '이름에 이동 단어', 2);
+    }
+    if (/location\.hash|\.hash\.(?:slice|substr|substring|replace|split)\(/.test(text)) sc.hash = true;
+  }
+
+  function scFetch(url) {
+    var job = fetch(url, { cache: 'force-cache', credentials: 'same-origin' }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var len = +r.headers.get('content-length') || 0;
+      if (len > SC_MAX_FILE) throw new Error('너무 큼');
+      return r.text();
+    });
+    // 응답이 끝없이 늦어도 검사가 멈추지 않게
+    var late = new Promise(function (ok, no) { setTimeout(function () { no(new Error('15초 초과')); }, 15000); });
+    return Promise.race([job, late]);
+  }
+
+  function scScan() {
+    if (sc.busy) return;
+    sc.busy = true; sc.scans++;
+    sc.url = location.href; sc.results = {}; sc.hash = false; sc.failed = []; sc.csp = 0; sc.read = 0; sc.inline = 0;
+    sc.targets = scTargets();
+    var cur = scCurrent(sc.targets);
+    if (!sc.sel || !sc.targets.some(function (t) { return t.id === sc.sel; })) sc.sel = cur || (sc.targets[0] && sc.targets[0].id) || '';
+    scSay('JS 파일을 읽는 중…');
+    scRender();
+    var found = Object.create(null);
+    // 페이지 안에 바로 적힌 스크립트
+    for (var i = 0; i < document.scripts.length; i++) {
+      var s = document.scripts[i];
+      // Eruda·이 도구 자신이 페이지에 바로 들어간 경우는 뺌
+      if (!s.src && s.textContent && !/eruda-select-patch|luna-dom-viewer/.test(s.textContent)) { try { scAnalyze(s.textContent, found); } catch (e) {} sc.inline++; }
+    }
+    var urls = scScriptUrls();
+    sc.files = urls.length;
+    function onCsp(e) { if (/connect-src|default-src/.test(e.violatedDirective || e.effectiveDirective || '')) sc.csp++; }
+    document.addEventListener('securitypolicyviolation', onCsp);
+    var jobs = urls.map(function (u) {
+      return scFetch(u).then(function (t) { sc.read++; try { scAnalyze(t, found); } catch (e) { log('바로가기 분석 오류', u, e); } },
+        function (e) { sc.failed.push(u.replace(/^https?:\/\//, '').slice(0, 80) + ' (' + (e && e.message ? e.message : e) + ')'); });
+    });
+    Promise.all(jobs).then(function () {
+      document.removeEventListener('securitypolicyviolation', onCsp);
+      try { scFinish(found); } catch (e) {
+        sc.busy = false; sc.last = '검사 오류: ' + (e && e.message ? e.message : e);
+        scSay(sc.last, true); log('바로가기', sc.last, e);
+      }
+    });
+  }
+
+  function scFinish(found) {
+    var list = [];
+    for (var k in found) {
+      var f = found[k];
+      f.score += SC_NAV_STRONG_RE.test(f.name) ? 5 : SC_NAV_RE.test(f.name) ? 2 : 0;
+      list.push(f);
+    }
+    list.sort(function (a, b) { return b.score - a.score || (a.name < b.name ? -1 : 1); });
+    // 주소 끝 #id — 브라우저 기본 이동 방식이라 늘 맨 앞에 두고 먼저 시험
+    list.unshift({ name: '#', score: 99, kinds: { '주소 끝 # (기본)': 1 } });
+    sc.params = list;
+    sc.busy = false;
+    sc.last = '검사 ' + sc.scans + '회: 칸 ' + sc.targets.length + '개, 후보 ' + (list.length - 1) + '개 (JS ' + sc.read + '/' + sc.files + '개 읽음)';
+    scSay(sc.targets.length ? '칸을 고르고 [자동 시험]을 누르세요. 이 칸으로 바로 가는 주소를 찾아 줘요.'
+      : 'id가 붙은 칸이 없어요. 메뉴·탭을 눌러 원하는 칸이 나오게 한 뒤 [다시 검사]를 누르세요.', !sc.targets.length);
+    scRender();
+    log('바로가기 검사', sc.last);
+  }
+
+  function scUrl(param, id) {
+    var u = new URL(location.href);
+    u.hash = '';
+    if (param === '#') u.hash = id;
+    else u.searchParams.set(param, id);
+    return u.href;
+  }
+
+  // 보이지 않는 창에 주소를 띄워 그 칸이 화면 위쪽으로 오는지 확인. sandbox: 바깥 페이지 이동·팝업·알림창은 막음
+  function scTestOne(url, id, done) {
+    var fr = document.createElement('iframe');
+    fr.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+    fr.setAttribute('aria-hidden', 'true');
+    fr.tabIndex = -1;
+    fr.style.cssText = 'position:fixed;left:0;top:0;border:0;opacity:0;pointer-events:none;z-index:-1;' +
+      'width:' + window.innerWidth + 'px;height:' + window.innerHeight + 'px;';
+    var t0 = Date.now(), lastY = null, stable = 0, ended = false, sawEl = false, loadedAt = 0, firstTop = null;
+    var timer = setInterval(check, 300);
+    function end(r) {
+      if (ended) return;
+      ended = true; clearInterval(timer);
+      setTimeout(function () { try { fr.src = 'about:blank'; } catch (e) {} if (fr.parentNode) fr.parentNode.removeChild(fr); }, 0);
+      done(r);
+    }
+    function check() {
+      var win = null, doc = null, href = '';
+      try { win = fr.contentWindow; doc = fr.contentDocument; href = doc ? doc.location.href : ''; } catch (e) {}
+      var now = Date.now(), late = now - t0 > SC_TEST_MS;
+      if (doc && href && href !== 'about:blank' && doc.readyState === 'complete' && !loadedAt) loadedAt = now;
+      // 다 뜬 뒤 4초가 지나도 그 칸이 위로 안 오면 더 기다리지 않음 (사이트 이동 코드는 보통 1초 안에 움직임)
+      if (loadedAt && now - loadedAt > 4000) late = true;
+      if (!doc || href === 'about:blank' || !href) { // 아직 안 떴거나, 사이트가 다른 창 안에 뜨는 걸 막음
+        if (late) end({ ok: false, why: doc ? '안 열림' : '사이트가 막음', blocked: !doc });
+        return;
+      }
+      var el = doc.getElementById(id);
+      if (el) {
+        sawEl = true;
+        var top = el.getBoundingClientRect().top, y = win.pageYOffset;
+        if (firstTop === null) firstTop = top;
+        // 창 전체가 내려갔거나(y), 안쪽 상자만 스크롤돼서 칸이 위로 올라왔으면 이동한 것
+        var near = top > -10 && top < win.innerHeight * 0.45 && (y > 10 || firstTop - top > 50);
+        y = y + Math.round(firstTop - top); // 안정 판정용 (안쪽 상자 스크롤도 반영)
+        if (near) {
+          stable = (lastY !== null && Math.abs(lastY - y) < 2) ? stable + 1 : 0;
+          if (stable >= 2) return end({ ok: true, top: Math.round(top) });
+        } else stable = 0;
+        lastY = y;
+      }
+      if (late) end({ ok: false, why: sawEl ? '그 칸으로 안 감' : '그 칸이 안 생김' });
+    }
+    // 다 떴는데 안을 볼 수 없거나 빈 화면이면 사이트가 다른 창 안에 뜨는 걸 막은 것 (X-Frame-Options·CSP)
+    fr.onload = function () {
+      var doc = null, href = '';
+      try { doc = fr.contentDocument; href = doc ? doc.location.href : ''; } catch (e) {}
+      if (!doc || !href || href === 'about:blank') end({ ok: false, why: '사이트가 막음', blocked: true });
+    };
+    fr.src = url; // 붙이기 전에 주소를 넣어야 빈 화면(about:blank)의 load로 오해하지 않음
+    (document.body || document.documentElement).appendChild(fr);
+  }
+
+  function scTargetInfo() {
+    for (var i = 0; i < sc.targets.length; i++) if (sc.targets[i].id === sc.sel) return sc.targets[i];
+    return null;
+  }
+
+  // 원래 페이지 위쪽에 있는 칸이면 주소 없이도 '위쪽'으로 보여서 결과가 확실하지 않음
+  function scNatural(t) { return !!t && t.top < window.innerHeight * 0.45; }
+
+  function scTestList(rows) {
+    if (sc.busy || !sc.sel) return;
+    var t = scTargetInfo(), natural = scNatural(t), id = sc.sel, i = 0, n = rows.length;
+    if (!n) return;
+    // 원래 페이지 맨 위쪽에 있는 칸은 주소 없이 열어도 보여서 시험이 의미 없음 (아무 주소나 성공으로 보임)
+    if (natural) {
+      sc.last = '시험 "' + id + '": 원래 위쪽 칸이라 시험 안 함';
+      scSay('이 칸은 원래 페이지 맨 위쪽이라 그냥 열어도 보여요. 아래쪽에 있는 칸을 고르세요.', true);
+      return;
+    }
+    var blocked = false;
+    sc.busy = true;
+    (function next() {
+      if (i >= n) {
+        sc.busy = false; sc.testing = '';
+        var ok = rows.filter(function (u) { return sc.results[u] && sc.results[u].ok; });
+        sc.last = '시험 "' + id + '": ' + (ok.length ? '✅ ' + ok[0] : blocked ? '❌ 사이트가 자동 시험을 막음' : '❌ 바로 가는 주소 없음 (' + n + '개 시험)');
+        scSay(ok.length ? '✅ 찾았어요. 초록색 주소로 열면 그 칸으로 바로 가요.'
+          : blocked ? '❌ 이 사이트는 다른 창 안에 뜨는 걸 막아서 자동 시험을 할 수 없어요. 후보 주소를 [열기]로 하나씩 직접 확인하세요.'
+          : '❌ 시험한 주소로는 그 칸에 안 가요. 아래 안내를 보세요.', !ok.length);
+        scRender();
+        log('바로가기', sc.last);
+        return;
+      }
+      var url = rows[i++];
+      sc.testing = url;
+      scSay('시험 중 ' + i + '/' + n + '… (주소 하나에 몇 초씩 걸려요)');
+      scRender();
+      scTestOne(url, id, function (r) {
+        sc.results[url] = r;
+        if (r.ok && rows.length > 1) i = n; // 하나 찾으면 나머지는 시험하지 않음
+        if (r.blocked) { blocked = true; i = n; } // 같은 사이트라 나머지도 막힘
+        next();
+      });
+    })();
+  }
+
+  function scRows() {
+    return sc.params.slice(0, SC_SHOW_MAX).map(function (p) { return { p: p, url: scUrl(p.name, sc.sel) }; });
+  }
+
+  function scTestAll() {
+    var urls = scRows().filter(function (r) { return r.p.name === '#' || !SC_UNSAFE_RE.test(r.p.name); })
+      .slice(0, SC_TEST_MAX).map(function (r) { return r.url; });
+    scTestList(urls);
+  }
+
+  function scSay(t, isErr) {
+    var m = sc.root && sc.root.querySelector('.esp-sc-msg');
+    if (m) { m.textContent = t; m.className = 'esp-sc-msg' + (isErr ? ' esp-err' : ''); }
+  }
+
+  function scRender() {
+    var body = sc.root && sc.root.querySelector('.esp-sc-body');
+    if (!body) return;
+    var h = [], cur = scCurrent(sc.targets);
+    h.push('<div class="esp-sc-h">① 이동할 칸 <span class="esp-sc-sub">id가 붙은 큰 요소 ' + sc.targets.length + '개</span></div>');
+    if (!sc.targets.length) h.push('<div class="esp-sc-none">없음</div>');
+    h.push('<div class="esp-sc-list">');
+    sc.targets.slice(0, 80).forEach(function (t) {
+      h.push('<div class="esp-sc-pick' + (t.id === sc.sel ? ' esp-on' : '') + '" data-act="sel" data-id="' + esc(t.id) + '">' +
+        '<b>' + esc(t.id) + '</b>' + (t.id === cur ? '<i>지금 화면</i>' : '') + '<span>' + esc(t.label) + '</span></div>');
+    });
+    h.push('</div>');
+    var rows = sc.sel ? scRows() : [];
+    h.push('<div class="esp-sc-h">② 주소 후보' + (sc.sel ? ' — <b>' + esc(sc.sel) + '</b>' : '') +
+      ' <span class="esp-sc-sub">JS ' + sc.read + '/' + sc.files + '개 읽음' + (sc.failed.length ? ', 실패 ' + sc.failed.length : '') + '</span></div>');
+    if (!sc.params.length) h.push('<div class="esp-sc-none">' + (sc.busy ? '읽는 중…' : '없음') + '</div>');
+    rows.forEach(function (r) {
+      var res = sc.results[r.url], unsafe = r.p.name !== '#' && SC_UNSAFE_RE.test(r.p.name);
+      var mark = sc.testing === r.url ? '⏳ 시험 중' : res ? (res.ok ? '✅ 바로 가요' : '❌ ' + res.why) : (unsafe ? '⚠️ 자동 시험에서 뺌' : '');
+      h.push('<div class="esp-sc-row' + (res && res.ok ? ' esp-ok' : '') + '">' +
+        '<div class="esp-sc-name"><b>' + esc(r.p.name === '#' ? '#id' : r.p.name) + '</b>' +
+        Object.keys(r.p.kinds).map(function (k) { return '<i>' + esc(k) + '</i>'; }).join('') +
+        (mark ? '<em>' + esc(mark) + '</em>' : '') + '</div>' +
+        '<div class="esp-sc-url">' + esc(r.url) + '</div>' +
+        '<div class="esp-sc-btns"><span data-act="try" data-url="' + esc(r.url) + '">시험</span>' +
+        '<span data-act="open" data-url="' + esc(r.url) + '">열기</span>' +
+        '<span data-act="copy" data-url="' + esc(r.url) + '">복사</span></div></div>');
+    });
+    h.push('<div class="esp-sc-tip">못 찾았을 때<br>' +
+      '• 메뉴·탭을 눌러 원하는 칸이 화면에 나오게 한 뒤 [다시 검사] — 그때 새로 불러온 JS까지 읽어요<br>' +
+      '• ✅가 없으면 이 사이트에 주소로 이동하는 기능이 없거나, 파라미터 여러 개를 같이 써야 할 수 있어요' +
+      (sc.hash ? '<br>• 이 페이지 코드는 주소의 # 뒤도 읽어요 (#이름_번호 같은 다른 형식일 수 있음)' : '') +
+      (sc.csp ? '<br>• 사이트 보안 정책(CSP)이 JS 다시 받기를 ' + sc.csp + '번 막았어요 — 유저스크립트 앱 설정에 따라 다를 수 있어요' : '') +
+      '</div>');
+    if (sc.failed.length) h.push('<div class="esp-sc-tip">못 읽은 JS ' + sc.failed.length + '개<br>' + sc.failed.slice(0, 20).map(esc).join('<br>') + '</div>');
+    body.innerHTML = h.join('');
+    var bar = sc.root.querySelectorAll('.esp-sc-bar span');
+    for (var i = 0; i < bar.length; i++) bar[i].className = 'esp-sc-btn' + (i === 1 ? ' esp-primary' : '') + (sc.busy ? ' esp-off' : '');
+  }
+
+  function scBuild(el) {
+    if (!el) return;
+    var root = document.createElement('div');
+    root.id = SC_ID;
+    root.innerHTML = '<div class="esp-sc-bar"><span data-act="scan">다시 검사</span><span data-act="test">자동 시험</span></div>' +
+      '<div class="esp-sc-msg">이 탭을 열면 검사해요.</div><div class="esp-sc-body"></div>' +
+      '<textarea class="esp-sc-ta" readonly tabindex="-1" aria-hidden="true"></textarea>';
+    root.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
+      if (!b || !root.contains(b)) return;
+      var act = b.getAttribute('data-act'), url = b.getAttribute('data-url');
+      if (act === 'scan') scScan();
+      else if (act === 'test') scTestAll();
+      else if (act === 'sel') { if (!sc.busy) { sc.sel = b.getAttribute('data-id'); sc.results = {}; scRender(); } }
+      else if (act === 'try') scTestList([url]);
+      else if (act === 'open') location.href = url;
+      else if (act === 'copy') {
+        var ta = root.querySelector('.esp-sc-ta');
+        ta.value = url;
+        copyText(ta, url, function (t) { scSay(t, t.indexOf('실패') >= 0); });
+      }
+    });
+    el.appendChild(root);
+    sc.root = root;
+    scRender();
+  }
+
+  function scShown() {
+    if (!sc.root) return;
+    var c = themeColors();
+    for (var k in c) sc.root.style.setProperty(k, c[k]);
+    if (!sc.busy && sc.url !== location.href) scScan(); // 처음 열 때·주소가 바뀌었을 때만 자동 검사
+  }
+
+  function addShortcutTool(er) {
+    if (!er || typeof er.add !== 'function') { sc.reg = '불가 — 이 실행 환경에선 Eruda가 안 보임'; return; }
+    try { if (er.get(SC_NAME)) { sc.reg = '등록됨'; return; } } catch (e) {}
+    sc.root = null; sc.url = ''; // Eruda를 껐다 켜면 탭 화면이 새로 만들어짐
+    try {
+      er.add({
+        name: SC_NAME,
+        init: function ($el) { this._$el = $el; scBuild($el && ($el.get ? $el.get(0) : $el[0])); },
+        show: function () { this._$el.show(); scShown(); return this; },
+        hide: function () { this._$el.hide(); return this; },
+        destroy: function () { this._$el.remove(); sc.root = null; }
+      });
+      sc.reg = sc.root ? '등록됨' : '등록됐지만 화면을 못 만듦';
+    } catch (e) { sc.reg = '실패 — ' + (e && e.message ? e.message : e); log('바로가기 탭 등록 실패', e); }
+  }
+
   // ───── 감시: Eruda가 나중에 뜨거나 다시 켜질 때 / Elements가 늦게 그려질 때 ─────
   var lastHost = null, innerObs = null;
   function watchInner() {
@@ -1070,6 +1489,7 @@
         ['✎ 버튼', '트리 ' + (btns.main ? '있음' : '없음') + ' / 상세 ' + (btns.detail ? '있음' : '없음')],
         ['🔍 버튼', btns.find ? '있음' : '없음'],
         ['마지막 검색', srch.last],
+        ['바로가기 탭', sc.reg + ' / ' + sc.last + (sc.failed.length ? ' / 못 읽은 JS ' + sc.failed.length + '개' : '') + (sc.csp ? ' / CSP 막힘 ' + sc.csp + '회' : '')],
         ['톱니 버튼', (gear.hidden ? '숨김' : '보임') + ' (길게 눌러 전환 ' + gear.toggles + '회, 건드려서 잠깐 보임 ' + gear.peeks + '회, 연결 ' + (gear.bound && gear.bound.isConnected ? '됨' : (q('.eruda-entry-btn[data-esp-gear]') ? '다른 쪽 스크립트가 담당' : '안 됨')) + ', 탭 막기 ' + gear.clickBlock + ')'],
         ['선택된 노드', cur.node ? nodeLabel(cur.node) : cur.err],
         ['수정 횟수', st.editCount + '회 (되돌리기 ' + undoStack.length + '개 대기)'],
@@ -1098,10 +1518,12 @@
       window.__erudaSelectPatch = {
         version: VERSION, diagnose: diagnose, text: diagText, reapply: applyPatch,
         edit: openEditor, undo: undoLast, _apply: applyEdit,
-        search: openSearch, _find: findMatches, toggleGear: toggleGear
+        search: openSearch, _find: findMatches, toggleGear: toggleGear,
+        shortcut: { scan: scScan, testAll: scTestAll, state: sc }
       };
     } catch (e) {}
     if (!er) return;
+    addShortcutTool(er);
     // Info·Snippets 탭마다 한 번만 등록 (Eruda를 껐다 켜면 탭이 새로 만들어지므로 그때는 다시 등록)
     var info = null, snip = null;
     try { info = er.get('info'); snip = er.get('snippets'); } catch (e) {}
