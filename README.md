@@ -28,10 +28,10 @@
 https://raw.githubusercontent.com/relaxedbrownie/eruda-tools/main/eruda-select.user.js
 ```
 
-AdGuard를 쓰지 않는 안드로이드 사용자는 파이어폭스에 Tampermonkey를 추가해서 쓸 수 있습니다.
+AdGuard를 쓰지 않는 안드로이드 사용자는 엣지에 Tampermonkey를 추가해서 쓸 수 있습니다.
 
-1. 파이어폭스를 설치하고, 파이어폭스로 [Tampermonkey 확장 기능](https://addons.mozilla.org/addon/tampermonkey/) 페이지를 열어 추가하기
-2. 파이어폭스에서 위의 `eruda-select.user.js` 링크를 열어 설치하기
+1. 엣지를 설치하고, 오른쪽 아래 메뉴의 **확장 기능** 화면에서 Tampermonkey를 찾아 추가하기
+2. 엣지에서 위의 `eruda-select.user.js` 링크를 열어 설치하기
 
 ## 짧은 북마클릿
 
